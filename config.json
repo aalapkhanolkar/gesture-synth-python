@@ -1,0 +1,41 @@
+{
+  "camera": {
+    "index": 0,
+    "backend": "auto",
+    "width": 1280,
+    "height": 720,
+    "fps": 30
+  },
+  "gesture": {
+    "stable_frames": 6,
+    "min_detection_confidence": 0.65,
+    "min_tracking_confidence": 0.55,
+    "max_num_hands": 1,
+    "mirror_camera": true
+  },
+  "synth": {
+    "sample_rate": 44100,
+    "block_size": 512,
+    "waveform": "sine",
+    "amplitude": 0.25,
+    "attack": 0.015,
+    "decay": 0.08,
+    "sustain": 0.75,
+    "release": 0.16,
+    "portamento": 0.025
+  },
+  "gesture_notes": {
+    "1": {
+      "name": "C4",
+      "frequency": 261.63
+    },
+    "2": {
+      "name": "E4",
+      "frequency": 329.63
+    },
+    "3": {
+      "name": "G4",
+      "frequency": 392.0
+    }
+  }
+}
