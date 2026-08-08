@@ -1,6 +1,6 @@
 # Gesture Synth Python
 
-A webcam-driven software synthesizer built in Python. Hold up one, two, or three fingers and the app plays configurable synthesized notes in real time.
+A webcam-driven software synthesizer built in Python. Play a five-position major or minor scale with one hand, then use the other hand for expressive volume and pitch control.
 
 This project is inspired by the browser-based reference at <https://gesture-synth-weld.vercel.app/> and is designed as a clean Python portfolio repo that runs from VS Code, a standard terminal, or a Jupyter notebook.
 
@@ -15,30 +15,40 @@ Add your demo media here after recording:
 ## Features
 
 - Realtime webcam hand tracking with MediaPipe Hands
-- Finger-count gestures for one hand
+- Two-hand MediaPipe tracking with dedicated playing and control roles
 - Debounced gesture state so notes do not retrigger every frame
 - Continuous audio stream with a real oscillator, not prerecorded files
 - Sine, square, sawtooth, and triangle waveforms
 - ADSR envelope with attack, decay, sustain, and release
 - Portamento-style frequency glide to reduce clicks when changing notes
-- OpenCV camera overlay with landmarks, gesture, note, frequency, waveform, stability, and FPS
-- JSON configuration for camera, synth, gesture stabilization, and gesture-to-note mapping
+- Persistent desktop performance UI with landmarks, gesture, note, frequency, waveform, stability, and FPS
+- Scale root and Major/Minor selection directly in the desktop UI
+- Left-hand height controls volume and horizontal position controls pitch bend
+- JSON configuration for camera, synth, gesture stabilization, scales, and two-hand controls
 - Tests for gesture stabilization, finger counting, and synth rendering
 - Jupyter notebook for waveform and hand-tracking experiments
 
 ## Gesture Mapping
 
-Default notes are configured in `config.json`:
+The playing hand follows a five-position layout. Select a root and Major or Minor in the UI; the second note adapts to the chosen scale.
 
 | Gesture | Note | Frequency |
 | --- | --- | --- |
-| 1 finger | C4 | 261.63 Hz |
-| 2 fingers | E4 | 329.63 Hz |
-| 3 fingers | G4 | 392.00 Hz |
-| 4 fingers | B4 | 493.88 Hz |
-| 5 fingers | C5 | 523.25 Hz |
+| 1 finger | Root | C4 in C Major or C Minor |
+| 2 fingers | Third | E4 in C Major, D#4 in C Minor |
+| 3 fingers | Fourth | F4 |
+| 4 fingers | Fifth | G4 |
+| 5 fingers | Octave | C5 |
 
 Unsupported gestures, including no hand or an unmapped finger count, smoothly release the active note.
+
+## Two-Hand Controls
+
+- **Right hand (PLAY):** Use one to five fingers for Root, Third, Fourth, Fifth, and Octave.
+- **Left hand (CONTROL):** Move up/down for volume and left/right for pitch bend.
+- Hand roles, pitch-bend range, minimum volume, root, and initial scale are configurable in `config.json` under `music`.
+
+If the camera view feels reversed, swap `music.playing_hand` and `music.control_hand` in `config.json`. MediaPipe labels describe your physical hands, while the displayed image is mirrored like a normal webcam preview.
 
 ## Project Structure
 
@@ -119,17 +129,17 @@ Use a different config file:
 python main.py --config path/to/config.json
 ```
 
-Press `Q` or `Esc` in the OpenCV window to quit.
+Use the **Close** button or the standard window close control to quit the desktop app.
 
 ## Configuration
 
 Edit `config.json` to change:
 
 - `camera.index`, `camera.backend`, `camera.width`, `camera.height`, and `camera.fps`
-- `gesture.stable_frames`
+- `gesture.stable_frames` and `gesture.max_num_hands`
 - MediaPipe confidence thresholds
 - `synth.waveform`, `synth.amplitude`, ADSR values, and portamento
-- `gesture_notes` for different notes, scales, or chords later
+- `music.root`, `music.scale`, hand roles, pitch bend range, and minimum volume
 
 Example waveform options:
 
@@ -137,12 +147,14 @@ Example waveform options:
 "waveform": "triangle"
 ```
 
-Example gesture extension:
+Example starting configuration for a D Minor two-hand instrument:
 
 ```json
-"4": {
-  "name": "C5",
-  "frequency": 523.25
+"music": {
+  "root": "D",
+  "scale": "minor",
+  "playing_hand": "Right",
+  "control_hand": "Left"
 }
 ```
 
@@ -151,11 +163,12 @@ Example gesture extension:
 `main.py` coordinates the realtime loop:
 
 1. `Camera` reads frames from OpenCV.
-2. `HandTracker` detects MediaPipe hand landmarks.
-3. `count_extended_fingers` estimates the raw finger count.
-4. `GestureStabilizer` debounces noisy detections.
-5. `Synthesizer` starts, releases, or glides notes without recreating the audio engine.
-6. `draw_overlay` renders the status panel and FPS.
+2. `HandTracker` detects and labels both hands with MediaPipe landmarks.
+3. The playing hand's finger count is debounced by `GestureStabilizer`.
+4. `ScaleLayout` maps the stable gesture to Root, Third, Fourth, Fifth, or Octave.
+5. The control hand maps height to volume and horizontal position to pitch bend.
+6. `Synthesizer` starts, releases, or glides notes without recreating the audio engine.
+7. The desktop UI renders camera landmarks, roles, controls, mapping, and FPS.
 
 The synth is monophonic for the MVP, but the modules are separated so future two-hand control can be added without rewriting the camera, gesture, or oscillator layers.
 
@@ -201,11 +214,8 @@ If dependency installation fails on a newer Python version, create the virtual e
 
 ## Future Improvements
 
-- Add 4- and 5-finger mappings
 - Add chords and scale modes
-- Use hand height for volume
-- Use hand position for pitch bend, filter cutoff, vibrato, or waveform selection
-- Add two-hand controls
+- Use hand position for filter cutoff, vibrato, or waveform selection
 - Add a low-pass filter, delay, or reverb
 - Add MIDI output
 - Record performances to WAV

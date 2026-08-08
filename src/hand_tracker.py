@@ -57,22 +57,30 @@ class HandTracker:
     def process(self, frame_bgr) -> tuple[Optional[HandDetection], object]:
         """Process a BGR frame and return the first detected hand."""
 
+        detections, results = self.process_all(frame_bgr)
+        return (detections[0] if detections else None), results
+
+    def process_all(self, frame_bgr) -> tuple[list[HandDetection], object]:
+        """Process a BGR frame and return each detected hand with its handedness."""
+
         rgb = cv2.cvtColor(frame_bgr, cv2.COLOR_BGR2RGB)
         rgb.flags.writeable = False
         results = self._hands.process(rgb)
         rgb.flags.writeable = True
 
         if not results.multi_hand_landmarks:
-            return None, results
+            return [], results
 
-        landmarks = results.multi_hand_landmarks[0]
-        handedness = "Right"
-        score = 0.0
-        if results.multi_handedness:
-            classification = results.multi_handedness[0].classification[0]
-            handedness = classification.label
-            score = classification.score
-        return HandDetection(landmarks=landmarks, handedness=handedness, score=score), results
+        detections = []
+        for index, landmarks in enumerate(results.multi_hand_landmarks):
+            handedness = "Right"
+            score = 0.0
+            if results.multi_handedness and index < len(results.multi_handedness):
+                classification = results.multi_handedness[index].classification[0]
+                handedness = classification.label
+                score = classification.score
+            detections.append(HandDetection(landmarks=landmarks, handedness=handedness, score=score))
+        return detections, results
 
     def draw(self, frame_bgr, results) -> None:
         """Draw all tracked hand landmarks on a frame."""

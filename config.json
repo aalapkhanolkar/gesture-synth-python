@@ -10,7 +10,7 @@
     "stable_frames": 6,
     "min_detection_confidence": 0.65,
     "min_tracking_confidence": 0.55,
-    "max_num_hands": 1,
+    "max_num_hands": 2,
     "mirror_camera": true
   },
   "synth": {
@@ -24,6 +24,14 @@
     "release": 0.16,
     "portamento": 0.025
   },
+  "music": {
+    "root": "C",
+    "scale": "major",
+    "playing_hand": "Right",
+    "control_hand": "Left",
+    "max_pitch_bend_semitones": 3.0,
+    "minimum_amplitude": 0.04
+  },
   "gesture_notes": {
     "1": {
       "name": "C4",
@@ -34,12 +42,12 @@
       "frequency": 329.63
     },
     "3": {
-      "name": "G4",
-      "frequency": 392.0
+      "name": "F4",
+      "frequency": 349.23
     },
     "4": {
-      "name": "B4",
-      "frequency": 493.88
+      "name": "G4",
+      "frequency": 392.0
     },
     "5": {
       "name": "C5",

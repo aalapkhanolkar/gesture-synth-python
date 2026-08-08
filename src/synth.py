@@ -93,6 +93,14 @@ class Synthesizer:
             self.active_note = None
             self._sustain_phase = False
 
+    def set_frequency(self, frequency: float) -> None:
+        """Glide an active note to a new frequency without retriggering its envelope."""
+
+        with self._lock:
+            self.target_frequency = float(frequency)
+            if self.active_note is not None:
+                self.active_note.frequency = float(frequency)
+
     def render(self, frames: int) -> np.ndarray:
         """Render a block of mono audio samples for tests or offline use."""
 
@@ -146,4 +154,3 @@ class Synthesizer:
     def _glide_coefficient(self) -> float:
         samples = max(1, int(self.config.portamento * self.sample_rate))
         return min(1.0, 1.0 / samples)
-

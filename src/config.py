@@ -52,7 +52,7 @@ class GestureConfig:
     stable_frames: int = 6
     min_detection_confidence: float = 0.65
     min_tracking_confidence: float = 0.55
-    max_num_hands: int = 1
+    max_num_hands: int = 2
     mirror_camera: bool = True
 
 
@@ -68,18 +68,31 @@ class CameraConfig:
 
 
 @dataclass(frozen=True)
+class MusicConfig:
+    """Scale and two-hand expressive control settings."""
+
+    root: str = "C"
+    scale: str = "major"
+    playing_hand: str = "Right"
+    control_hand: str = "Left"
+    max_pitch_bend_semitones: float = 3.0
+    minimum_amplitude: float = 0.04
+
+
+@dataclass(frozen=True)
 class AppConfig:
     """Top-level application settings."""
 
     camera: CameraConfig = field(default_factory=CameraConfig)
     gesture: GestureConfig = field(default_factory=GestureConfig)
     synth: SynthConfig = field(default_factory=SynthConfig)
+    music: MusicConfig = field(default_factory=MusicConfig)
     gesture_notes: Mapping[int, NoteConfig] = field(
         default_factory=lambda: {
             1: NoteConfig("C4", NOTE_FREQUENCIES["C4"]),
             2: NoteConfig("E4", NOTE_FREQUENCIES["E4"]),
-            3: NoteConfig("G4", NOTE_FREQUENCIES["G4"]),
-            4: NoteConfig("B4", NOTE_FREQUENCIES["B4"]),
+            3: NoteConfig("F4", 349.23),
+            4: NoteConfig("G4", NOTE_FREQUENCIES["G4"]),
             5: NoteConfig("C5", NOTE_FREQUENCIES["C5"]),
         }
     )
@@ -108,6 +121,7 @@ class AppConfig:
         camera = CameraConfig(**{**defaults.camera.__dict__, **raw.get("camera", {})})
         gesture = GestureConfig(**{**defaults.gesture.__dict__, **raw.get("gesture", {})})
         synth = SynthConfig(**{**defaults.synth.__dict__, **raw.get("synth", {})})
+        music = MusicConfig(**{**defaults.music.__dict__, **raw.get("music", {})})
 
         note_map = dict(defaults.gesture_notes)
         for key, value in raw.get("gesture_notes", {}).items():
@@ -116,7 +130,7 @@ class AppConfig:
             frequency = float(value.get("frequency", NOTE_FREQUENCIES.get(note_name, 440.0)))
             note_map[fingers] = NoteConfig(note_name, frequency)
 
-        return cls(camera=camera, gesture=gesture, synth=synth, gesture_notes=note_map)
+        return cls(camera=camera, gesture=gesture, synth=synth, music=music, gesture_notes=note_map)
 
 
 def default_config_path() -> Path:

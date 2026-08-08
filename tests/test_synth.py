@@ -34,3 +34,14 @@ def test_all_supported_waveforms_render():
 
         assert np.isfinite(audio).all()
 
+
+def test_frequency_changes_without_retriggering_note():
+    synth = Synthesizer(SynthConfig(sample_rate=8000, portamento=0.001))
+    synth.note_on("C4", 261.63)
+    synth.render(100)
+    synth.set_frequency(293.66)
+    synth.render(100)
+
+    assert synth.active_note is not None
+    assert synth.active_note.name == "C4"
+    assert synth.target_frequency == 293.66
