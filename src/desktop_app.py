@@ -5,11 +5,13 @@ from __future__ import annotations
 from dataclasses import replace
 import logging
 import math
+from pathlib import Path
+import time
 from typing import Optional
 
 import cv2
 import numpy as np
-from PIL import Image, ImageTk
+from PIL import Image, ImageGrab, ImageTk
 import tkinter as tk
 from tkinter import ttk
 
@@ -212,6 +214,7 @@ class GestureSynthApp:
 
         self.audio_button = ttk.Button(panel, text="Mute audio", command=self._toggle_audio)
         self.audio_button.pack(fill="x", pady=(0, 8))
+        ttk.Button(panel, text="Save screenshot", command=self._save_screenshot).pack(fill="x", pady=(0, 8))
         ttk.Button(panel, text="Reconnect camera", command=self._reconnect_camera).pack(fill="x", pady=(0, 8))
         ttk.Button(panel, text="Close", command=self.close).pack(fill="x")
 
@@ -355,3 +358,17 @@ class GestureSynthApp:
 
     def _reconnect_camera(self) -> None:
         self.camera.reconnect()
+
+    def _save_screenshot(self) -> None:
+        """Save only this application window as a real runtime screenshot."""
+
+        self.root.update_idletasks()
+        left = self.root.winfo_rootx()
+        top = self.root.winfo_rooty()
+        right = left + self.root.winfo_width()
+        bottom = top + self.root.winfo_height()
+        output_dir = Path(__file__).resolve().parents[1] / "assets" / "screenshots"
+        output_dir.mkdir(parents=True, exist_ok=True)
+        destination = output_dir / f"gesture-synth-{time.strftime('%Y%m%d-%H%M%S')}.png"
+        ImageGrab.grab(bbox=(left, top, right, bottom), all_screens=True).save(destination)
+        self.connection_var.set(f"Screenshot saved: {destination.name}")
