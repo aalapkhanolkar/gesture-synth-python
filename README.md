@@ -185,7 +185,7 @@ The tests avoid requiring a real webcam or speaker, so they are useful for quick
 
 ## Troubleshooting
 
-If the camera does not open, change `camera.index` in `config.json` from `0` to `1` or another available camera index. On Windows, `camera.backend` defaults to DirectShow through `auto`; if your webcam prefers another backend, try `"msmf"` or `"any"`.
+This computer uses the Windows Media Foundation backend (`"msmf"`), which is set in `config.json`. If the camera does not open, first close Teams, Zoom, or the Windows Camera app, then check Windows Settings > Privacy & security > Camera and confirm camera access is enabled. You can also try changing `camera.index` from `0` to `1`, or change `camera.backend` to `"auto"`, `"dshow"`, or `"any"`.
 
 If the OpenCV window appears but no hand is detected, improve lighting, keep your hand fully in frame, and try raising or lowering `gesture.min_detection_confidence`.
 

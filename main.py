@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Optional
 
 import cv2
+import numpy as np
 
 from src.camera import Camera
 from src.config import AppConfig, NoteConfig, default_config_path
@@ -37,6 +38,8 @@ def main() -> int:
     logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
     args = parse_args()
     config = AppConfig.load(args.config)
+    if args.no_audio:
+        LOGGER.info("Audio disabled. Running camera and gesture detection only.")
 
     camera = tracker = synth = None
     last_note_name: Optional[str] = None
@@ -54,6 +57,53 @@ def main() -> int:
 
         while True:
             frame = camera.read()
+            if frame is None:
+                frame = np.zeros((config.camera.height, config.camera.width, 3), dtype=np.uint8)
+                cv2.putText(
+                    frame,
+                    "GESTURE SYNTH",
+                    (40, config.camera.height // 2),
+                    cv2.FONT_HERSHEY_SIMPLEX,
+                    1.0,
+                    (80, 220, 180),
+                    2,
+                    cv2.LINE_AA,
+                )
+                cv2.putText(
+                    frame,
+                    camera.status,
+                    (40, config.camera.height // 2 + 44),
+                    cv2.FONT_HERSHEY_SIMPLEX,
+                    0.7,
+                    (235, 235, 235),
+                    2,
+                    cv2.LINE_AA,
+                )
+                cv2.putText(
+                    frame,
+                    "Allow camera access in Windows Settings > Privacy & security > Camera",
+                    (40, config.camera.height // 2 + 82),
+                    cv2.FONT_HERSHEY_SIMPLEX,
+                    0.55,
+                    (190, 190, 190),
+                    1,
+                    cv2.LINE_AA,
+                )
+                cv2.putText(
+                    frame,
+                    "Press Q or Esc to quit",
+                    (40, config.camera.height // 2 + 116),
+                    cv2.FONT_HERSHEY_SIMPLEX,
+                    0.55,
+                    (190, 190, 190),
+                    1,
+                    cv2.LINE_AA,
+                )
+                cv2.imshow("Gesture Synth", frame)
+                if cv2.waitKey(1) & 0xFF in (ord("q"), 27):
+                    break
+                continue
+
             if config.gesture.mirror_camera:
                 frame = cv2.flip(frame, 1)
 
@@ -102,4 +152,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

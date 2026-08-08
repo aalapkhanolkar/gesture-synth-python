@@ -12,6 +12,8 @@ import cv2
 
 from .config import GestureConfig
 
+os.environ.setdefault("TF_CPP_MIN_LOG_LEVEL", "2")
+os.environ.setdefault("GLOG_minloglevel", "2")
 os.environ.setdefault(
     "MPLCONFIGDIR",
     str(Path(__file__).resolve().parents[1] / ".cache" / "matplotlib"),

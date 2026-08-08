@@ -1,7 +1,7 @@
 {
   "camera": {
     "index": 0,
-    "backend": "auto",
+    "backend": "msmf",
     "width": 1280,
     "height": 720,
     "fps": 30
