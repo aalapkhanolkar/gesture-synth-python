@@ -4,8 +4,6 @@ A webcam-driven software synthesizer built in Python. Play a five-position major
 
 This project is inspired by the browser-based reference at <https://gesture-synth-weld.vercel.app/> and is designed as a clean Python portfolio repo that runs from VS Code, a standard terminal, or a Jupyter notebook.
 
-![Two-hand gesture synth performance](assets/readme/hero-two-hand-performance.png)
-
 ## Demo
 
 The desktop app includes a **Save screenshot** button that captures only the running Gesture Synth window to `assets/screenshots/`. Add your own recorded runtime captures here after a performance:
@@ -13,18 +11,6 @@ The desktop app includes a **Save screenshot** button that captures only the run
 - GIF demo: `assets/screenshots/demo.gif`
 - Screenshot: `assets/screenshots/main-window.png`
 - YouTube or demo video: `https://...`
-
-## Visual Tour
-
-The app is designed around an actual two-hand performance workflow: one hand selects notes and the other continuously shapes the sound.
-
-| Two-hand performance position | Playing-hand gesture detection |
-| --- | --- |
-| ![Musician using both hands with a gesture synth](assets/readme/two-hand-performance.png) | ![Five-finger playing hand tracked near a laptop webcam](assets/readme/playing-hand-closeup.png) |
-
-| Control-hand expression | Gesture synth in a studio setting |
-| --- | --- |
-| ![Control hand used for volume and pitch bend](assets/readme/control-hand-closeup.png) | ![Gesture synth desktop workflow in a music studio](assets/readme/studio-performance.png) |
 
 ## How It Works Visually
 
