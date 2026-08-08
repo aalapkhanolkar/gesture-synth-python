@@ -16,6 +16,7 @@ NOTE_FREQUENCIES = {
     "C4": 261.63,
     "E4": 329.63,
     "G4": 392.00,
+    "B4": 493.88,
     "C5": 523.25,
     "E5": 659.25,
 }
@@ -78,6 +79,8 @@ class AppConfig:
             1: NoteConfig("C4", NOTE_FREQUENCIES["C4"]),
             2: NoteConfig("E4", NOTE_FREQUENCIES["E4"]),
             3: NoteConfig("G4", NOTE_FREQUENCIES["G4"]),
+            4: NoteConfig("B4", NOTE_FREQUENCIES["B4"]),
+            5: NoteConfig("C5", NOTE_FREQUENCIES["C5"]),
         }
     )
 

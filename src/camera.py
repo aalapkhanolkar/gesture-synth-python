@@ -69,6 +69,11 @@ class Camera:
 
         self._release_capture()
 
+    def reconnect(self) -> None:
+        """Immediately retry camera discovery after a user requests a reconnect."""
+
+        self._connect()
+
     def _connect_if_due(self, force: bool = False) -> None:
         now = time.monotonic()
         if force or now - self._last_connect_attempt >= self._RECONNECT_INTERVAL_SECONDS:

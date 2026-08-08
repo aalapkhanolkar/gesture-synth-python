@@ -35,6 +35,8 @@ Default notes are configured in `config.json`:
 | 1 finger | C4 | 261.63 Hz |
 | 2 fingers | E4 | 329.63 Hz |
 | 3 fingers | G4 | 392.00 Hz |
+| 4 fingers | B4 | 493.88 Hz |
+| 5 fingers | C5 | 523.25 Hz |
 
 Unsupported gestures, including no hand or an unmapped finger count, smoothly release the active note.
 
@@ -99,7 +101,7 @@ pip install -r requirements.txt
 
 ## Run
 
-Start the full webcam and audio app:
+Start the full webcam and audio app. This opens the persistent Gesture Synth desktop window, which contains the live camera preview, landmarks, audio controls, waveform selector, and note status:
 
 ```bash
 python main.py

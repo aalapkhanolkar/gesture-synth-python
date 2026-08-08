@@ -36,6 +36,14 @@
     "3": {
       "name": "G4",
       "frequency": 392.0
+    },
+    "4": {
+      "name": "B4",
+      "frequency": 493.88
+    },
+    "5": {
+      "name": "C5",
+      "frequency": 523.25
     }
   }
 }
