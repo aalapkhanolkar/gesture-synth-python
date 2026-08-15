@@ -29,6 +29,24 @@ SCALE_INTERVALS = {
     "minor": (0, 3, 5, 7, 12),
 }
 DEGREE_LABELS = ("Root", "3rd", "4th", "5th", "Octave")
+CHORD_INTERVALS = {
+    "major": (0, 4, 7),
+    "minor": (0, 3, 7),
+    "sus2": (0, 2, 7),
+    "sus4": (0, 5, 7),
+    "major7": (0, 4, 7, 11),
+    "minor7": (0, 3, 7, 10),
+    "dominant7": (0, 4, 7, 10),
+}
+CHORD_QUALITY_LABELS = {
+    "major": "Major",
+    "minor": "Minor",
+    "sus2": "Sus2",
+    "sus4": "Sus4",
+    "major7": "Major 7",
+    "minor7": "Minor 7",
+    "dominant7": "Dominant 7",
+}
 
 
 @dataclass(frozen=True)
@@ -81,3 +99,57 @@ class ScaleLayout:
     @staticmethod
     def _midi_name(midi_note: int) -> str:
         return f"{SHARP_NAMES[midi_note % 12]}{midi_note // 12 - 1}"
+
+
+@dataclass(frozen=True)
+class Chord:
+    """A chord root and quality rendered as realtime synth voices."""
+
+    root: str
+    quality: str
+    octave: int = 4
+
+    def __post_init__(self) -> None:
+        if self.root not in ROOT_SEMITONES:
+            raise ValueError(f"Unsupported chord root: {self.root}")
+        if self.quality not in CHORD_INTERVALS:
+            raise ValueError(f"Unsupported chord quality: {self.quality}")
+
+    @property
+    def display_name(self) -> str:
+        return f"{self.root} {CHORD_QUALITY_LABELS[self.quality]}"
+
+    def notes(self) -> tuple[NoteConfig, ...]:
+        """Return the chord's root-position notes."""
+
+        root_midi = 12 * (self.octave + 1) + ROOT_SEMITONES[self.root]
+        return tuple(
+            NoteConfig(
+                name=ScaleLayout._midi_name(root_midi + interval),
+                frequency=ScaleLayout._midi_frequency(root_midi + interval),
+            )
+            for interval in CHORD_INTERVALS[self.quality]
+        )
+
+
+def chord_from_label(label: str) -> Chord:
+    """Parse a combobox label such as ``C Major 7`` into a chord."""
+
+    root, quality_label = label.split(" ", maxsplit=1)
+    quality = next(
+        (key for key, display in CHORD_QUALITY_LABELS.items() if display == quality_label),
+        None,
+    )
+    if quality is None:
+        raise ValueError(f"Unsupported chord label: {label}")
+    return Chord(root, quality)
+
+
+def available_chord_labels() -> tuple[str, ...]:
+    """Return every root/quality combination offered by the chord slot controls."""
+
+    return tuple(
+        Chord(root, quality).display_name
+        for root in ROOT_SEMITONES
+        for quality in CHORD_QUALITY_LABELS
+    )

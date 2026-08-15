@@ -68,6 +68,14 @@ class CameraConfig:
 
 
 @dataclass(frozen=True)
+class ChordSlotConfig:
+    """One selectable chord assigned to a finger-count gesture."""
+
+    root: str = "C"
+    quality: str = "major"
+
+
+@dataclass(frozen=True)
 class MusicConfig:
     """Scale and two-hand expressive control settings."""
 
@@ -77,6 +85,16 @@ class MusicConfig:
     control_hand: str = "Left"
     max_pitch_bend_semitones: float = 3.0
     minimum_amplitude: float = 0.04
+    performance_mode: str = "notes"
+    chord_slots: Mapping[int, ChordSlotConfig] = field(
+        default_factory=lambda: {
+            1: ChordSlotConfig("C", "major"),
+            2: ChordSlotConfig("D", "minor"),
+            3: ChordSlotConfig("F", "major"),
+            4: ChordSlotConfig("G", "major"),
+            5: ChordSlotConfig("A", "minor"),
+        }
+    )
 
 
 @dataclass(frozen=True)
@@ -121,7 +139,15 @@ class AppConfig:
         camera = CameraConfig(**{**defaults.camera.__dict__, **raw.get("camera", {})})
         gesture = GestureConfig(**{**defaults.gesture.__dict__, **raw.get("gesture", {})})
         synth = SynthConfig(**{**defaults.synth.__dict__, **raw.get("synth", {})})
-        music = MusicConfig(**{**defaults.music.__dict__, **raw.get("music", {})})
+        music_raw = raw.get("music", {})
+        chord_slots = dict(defaults.music.chord_slots)
+        for key, value in music_raw.get("chord_slots", {}).items():
+            chord_slots[int(key)] = ChordSlotConfig(
+                root=str(value.get("root", "C")),
+                quality=str(value.get("quality", "major")),
+            )
+        music_values = {key: value for key, value in music_raw.items() if key != "chord_slots"}
+        music = MusicConfig(**{**defaults.music.__dict__, **music_values, "chord_slots": chord_slots})
 
         note_map = dict(defaults.gesture_notes)
         for key, value in raw.get("gesture_notes", {}).items():

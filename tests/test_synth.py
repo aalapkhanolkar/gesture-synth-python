@@ -45,3 +45,23 @@ def test_frequency_changes_without_retriggering_note():
     assert synth.active_note is not None
     assert synth.active_note.name == "C4"
     assert synth.target_frequency == 293.66
+
+
+def test_chord_renders_multiple_active_voices():
+    synth = Synthesizer(SynthConfig(sample_rate=8000, attack=0.001))
+    synth.chord_on("C Major", (("C4", 261.63), ("E4", 329.63), ("G4", 392.00)))
+
+    audio = synth.render(512)
+
+    assert synth.active_voice_count == 3
+    assert np.max(np.abs(audio)) > 0.01
+
+
+def test_chord_frequency_glides_without_retriggering_voices():
+    synth = Synthesizer(SynthConfig(sample_rate=8000, attack=0.001, portamento=0.001))
+    synth.chord_on("C Major", (("C4", 261.63), ("E4", 329.63), ("G4", 392.00)))
+    synth.render(100)
+    synth.set_chord_frequencies((293.66, 369.99, 440.00))
+
+    assert synth.active_voice_count == 3
+    assert synth.target_frequency == 293.66

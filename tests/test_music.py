@@ -1,6 +1,6 @@
 import pytest
 
-from src.music import ScaleLayout
+from src.music import Chord, ScaleLayout, chord_from_label
 
 
 def test_major_scale_layout_is_root_third_fourth_fifth_octave():
@@ -21,3 +21,17 @@ def test_scale_layout_rejects_unknown_root_or_mode():
         ScaleLayout("H", "major")
     with pytest.raises(ValueError):
         ScaleLayout("C", "dorian")
+
+
+def test_major_seventh_chord_contains_four_synth_notes():
+    chord = Chord("C", "major7")
+
+    assert chord.display_name == "C Major 7"
+    assert [note.name for note in chord.notes()] == ["C4", "E4", "G4", "B4"]
+
+
+def test_chord_label_round_trip():
+    chord = chord_from_label("D Minor 7")
+
+    assert chord.root == "D"
+    assert chord.quality == "minor7"

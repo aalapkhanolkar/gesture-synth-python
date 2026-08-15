@@ -28,8 +28,10 @@ The desktop app includes a **Save screenshot** button that captures only the run
 
 - Realtime webcam hand tracking with MediaPipe Hands
 - Two-hand MediaPipe tracking with dedicated playing and control roles
+- Professional dark-mode performance studio with Notes and Chords modes
+- Five editable chord slots mapped directly to gestures one through five
 - Debounced gesture state so notes do not retrigger every frame
-- Continuous audio stream with a real oscillator, not prerecorded files
+- Continuous polyphonic audio stream with real oscillators, not prerecorded files
 - Sine, square, sawtooth, and triangle waveforms
 - ADSR envelope with attack, decay, sustain, and release
 - Portamento-style frequency glide to reduce clicks when changing notes
@@ -53,6 +55,25 @@ The playing hand follows a five-position layout. Select a root and Major or Mino
 | 5 fingers | Octave | C5 |
 
 Unsupported gestures, including no hand or an unmapped finger count, smoothly release the active note.
+
+## Chord Mode
+
+Select **Chords** in the top performance deck to turn gestures one through five into polyphonic chord triggers. Each slot is editable from the chord rack, with these available qualities:
+
+- Major, Minor, Sus2, Sus4
+- Major 7, Minor 7, Dominant 7
+
+The default slots form a playable C Major progression:
+
+| Gesture | Default chord | Synth notes |
+| --- | --- | --- |
+| 1 finger | C Major | C4, E4, G4 |
+| 2 fingers | D Minor | D4, F4, A4 |
+| 3 fingers | F Major | F4, A4, C5 |
+| 4 fingers | G Major | G4, B4, D5 |
+| 5 fingers | A Minor | A4, C5, E5 |
+
+The continuous audio stream remains active while the chord changes, releasing the prior chord smoothly and keeping the new chord responsive.
 
 ## Two-Hand Controls
 
@@ -152,6 +173,8 @@ Edit `config.json` to change:
 - MediaPipe confidence thresholds
 - `synth.waveform`, `synth.amplitude`, ADSR values, and portamento
 - `music.root`, `music.scale`, hand roles, pitch bend range, and minimum volume
+- `music.performance_mode` to start in `"notes"` or `"chords"`
+- `music.chord_slots` to persist five root/quality chord choices
 
 Example waveform options:
 
@@ -179,8 +202,8 @@ Example starting configuration for a D Minor two-hand instrument:
 3. The playing hand's finger count is debounced by `GestureStabilizer`.
 4. `ScaleLayout` maps the stable gesture to Root, Third, Fourth, Fifth, or Octave.
 5. The control hand maps height to volume and horizontal position to pitch bend.
-6. `Synthesizer` starts, releases, or glides notes without recreating the audio engine.
-7. The desktop UI renders camera landmarks, roles, controls, mapping, and FPS.
+6. `Synthesizer` starts, releases, or glides mono notes and polyphonic chords without recreating the audio engine.
+7. The dark desktop performance UI renders camera landmarks, roles, note/chord controls, mapping, and FPS.
 
 The synth is monophonic for the MVP, but the modules are separated so future two-hand control can be added without rewriting the camera, gesture, or oscillator layers.
 
@@ -199,6 +222,25 @@ notebooks/gesture_synth_experiments.ipynb
 ```
 
 The notebook includes waveform visualization and a webcam landmark debugging loop.
+
+## macOS App and DMG
+
+The project includes [requirements-macos.txt](requirements-macos.txt) and [build_macos_dmg.sh](scripts/build_macos_dmg.sh) for packaging the app on a Mac. PyInstaller creates operating-system-specific applications, so build the `.dmg` on macOS rather than Windows.
+
+On a Mac, from the repository root:
+
+```bash
+bash scripts/build_macos_dmg.sh
+```
+
+The script creates both:
+
+```text
+dist/Gesture Synth.app
+dist/GestureSynth.dmg
+```
+
+The generated `.dmg` is unsigned. For distribution outside your own Mac, sign and notarize the `.app` with an Apple Developer certificate before sharing it.
 
 ## Tests
 

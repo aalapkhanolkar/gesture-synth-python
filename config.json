@@ -30,7 +30,30 @@
     "playing_hand": "Right",
     "control_hand": "Left",
     "max_pitch_bend_semitones": 3.0,
-    "minimum_amplitude": 0.04
+    "minimum_amplitude": 0.04,
+    "performance_mode": "notes",
+    "chord_slots": {
+      "1": {
+        "root": "C",
+        "quality": "major"
+      },
+      "2": {
+        "root": "D",
+        "quality": "minor"
+      },
+      "3": {
+        "root": "F",
+        "quality": "major"
+      },
+      "4": {
+        "root": "G",
+        "quality": "major"
+      },
+      "5": {
+        "root": "A",
+        "quality": "minor"
+      }
+    }
   },
   "gesture_notes": {
     "1": {
