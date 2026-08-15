@@ -31,7 +31,14 @@
     "control_hand": "Left",
     "max_pitch_bend_semitones": 3.0,
     "minimum_amplitude": 0.04,
-    "performance_mode": "notes",
+    "performance_mode": "scale",
+    "note_slots": {
+      "1": { "name": "C4" },
+      "2": { "name": "E4" },
+      "3": { "name": "F4" },
+      "4": { "name": "G4" },
+      "5": { "name": "C5" }
+    },
     "chord_slots": {
       "1": {
         "root": "C",

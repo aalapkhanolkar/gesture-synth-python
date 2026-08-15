@@ -19,22 +19,30 @@ from .camera import Camera
 from .config import AppConfig, NoteConfig
 from .gesture_detector import GestureStabilizer, count_extended_fingers, supported_gesture
 from .hand_tracker import HandDetection, HandTracker
-from .music import Chord, ROOT_SEMITONES, ScaleLayout, available_chord_labels, chord_from_label
+from .music import (
+    Chord,
+    ROOT_SEMITONES,
+    ScaleLayout,
+    available_chord_labels,
+    available_note_names,
+    chord_from_label,
+    note_from_name,
+)
 from .synth import Synthesizer
 from .ui import FPSCounter, draw_overlay
 
 
 LOGGER = logging.getLogger(__name__)
 
-BACKGROUND = "#0b1020"
-SURFACE = "#121a2c"
-SURFACE_RAISED = "#1b263b"
-BORDER = "#31415d"
-TEXT = "#edf2f7"
-MUTED = "#9aa9c0"
-MINT = "#6ee7c8"
-GOLD = "#f6c453"
-CORAL = "#fb7185"
+BACKGROUND = "#0d0f13"
+SURFACE = "#151922"
+SURFACE_RAISED = "#202631"
+BORDER = "#303946"
+TEXT = "#f4f7fb"
+MUTED = "#9aa4b2"
+MINT = "#77e6ca"
+GOLD = "#f2c55c"
+CORAL = "#f1788b"
 
 
 class GestureSynthApp:
@@ -70,7 +78,7 @@ class GestureSynthApp:
         self.audio_enabled = False
 
         mode = config.music.performance_mode.lower()
-        self.performance_mode = mode if mode in {"notes", "chords"} else "notes"
+        self.performance_mode = "scale" if mode not in {"scale", "notes", "chords"} else mode
         self.connection_var = tk.StringVar(value=self.camera.status)
         self.mode_status_var = tk.StringVar()
         self.gesture_var = tk.StringVar(value="GESTURE  -")
@@ -87,6 +95,15 @@ class GestureSynthApp:
             fingers: tk.StringVar(value=self.chord_slots[fingers].display_name)
             for fingers in range(1, 6)
         }
+        self.note_slots = {
+            fingers: note_from_name(slot.name)
+            for fingers, slot in config.music.note_slots.items()
+        }
+        self.note_slot_vars = {
+            fingers: tk.StringVar(value=self.note_slots[fingers].name)
+            for fingers in range(1, 6)
+        }
+        self.note_selectors: list[ttk.Combobox] = []
         self.chord_selectors: list[ttk.Combobox] = []
 
         self._build_ui()
@@ -140,21 +157,22 @@ class GestureSynthApp:
     def _configure_style(self) -> None:
         style = ttk.Style(self.root)
         style.theme_use("clam")
-        style.configure("Dark.TCombobox", fieldbackground=SURFACE_RAISED, background=SURFACE_RAISED, foreground=TEXT, arrowcolor=MINT)
+        style.configure("Dark.TCombobox", fieldbackground=SURFACE_RAISED, background=SURFACE_RAISED, foreground=TEXT, arrowcolor=MINT, bordercolor=BORDER)
         style.map("Dark.TCombobox", fieldbackground=[("readonly", SURFACE_RAISED)], foreground=[("readonly", TEXT)])
         style.configure("Dark.TButton", background=SURFACE_RAISED, foreground=TEXT, bordercolor=BORDER, padding=(12, 8))
         style.map("Dark.TButton", background=[("active", "#283a57")])
 
     def _build_ui(self) -> None:
-        header = tk.Frame(self.root, bg=BACKGROUND, padx=24, pady=18)
+        header = tk.Frame(self.root, bg=BACKGROUND, padx=26, pady=18)
         header.pack(fill="x")
-        tk.Label(header, text="GESTURE SYNTH", font=("Segoe UI", 20, "bold"), fg=TEXT, bg=BACKGROUND).pack(side="left")
-        tk.Label(header, text="PERFORMANCE STUDIO", font=("Segoe UI", 10, "bold"), fg=MINT, bg=BACKGROUND, padx=12).pack(side="left")
+        tk.Label(header, text="GESTURE SYNTH", font=("Segoe UI", 21, "bold"), fg=TEXT, bg=BACKGROUND).pack(side="left")
+        tk.Label(header, text="LIVE PERFORMANCE", font=("Segoe UI", 9, "bold"), fg=MINT, bg=BACKGROUND, padx=14).pack(side="left")
         tk.Label(header, textvariable=self.connection_var, font=("Segoe UI", 10), fg=MUTED, bg=BACKGROUND).pack(side="right")
 
-        deck = tk.Frame(self.root, bg=SURFACE, padx=20, pady=14, highlightbackground=BORDER, highlightthickness=1)
+        deck = tk.Frame(self.root, bg=SURFACE, padx=20, pady=15, highlightbackground=BORDER, highlightthickness=1)
         deck.pack(fill="x", padx=20)
         self._build_global_controls(deck)
+        self._build_note_rack(deck)
         self._build_chord_rack(deck)
 
         content = tk.Frame(self.root, bg=BACKGROUND, padx=20, pady=18)
@@ -175,17 +193,21 @@ class GestureSynthApp:
     def _build_global_controls(self, parent: tk.Frame) -> None:
         row = tk.Frame(parent, bg=SURFACE)
         row.pack(fill="x")
-        self._section_label(row, "MODE").pack(side="left")
+        self._section_label(row, "PERFORM").pack(side="left")
+        self.scale_button = self._mode_button(row, "Scale", lambda: self._set_performance_mode("scale"))
+        self.scale_button.pack(side="left", padx=(10, 4))
         self.notes_button = self._mode_button(row, "Notes", lambda: self._set_performance_mode("notes"))
-        self.notes_button.pack(side="left", padx=(10, 4))
+        self.notes_button.pack(side="left", padx=(0, 4))
         self.chords_button = self._mode_button(row, "Chords", lambda: self._set_performance_mode("chords"))
         self.chords_button.pack(side="left", padx=(0, 20))
 
         self._section_label(row, "SCALE").pack(side="left")
-        root_picker = ttk.Combobox(row, textvariable=self.root_var, values=tuple(ROOT_SEMITONES), state="readonly", width=5, style="Dark.TCombobox")
+        self.root_picker = ttk.Combobox(row, textvariable=self.root_var, values=tuple(ROOT_SEMITONES), state="readonly", width=5, style="Dark.TCombobox")
+        root_picker = self.root_picker
         root_picker.pack(side="left", padx=(10, 5))
         root_picker.bind("<<ComboboxSelected>>", self._change_scale)
-        scale_picker = ttk.Combobox(row, textvariable=self.scale_var, values=("Major", "Minor"), state="readonly", width=9, style="Dark.TCombobox")
+        self.scale_picker = ttk.Combobox(row, textvariable=self.scale_var, values=("Major", "Minor"), state="readonly", width=9, style="Dark.TCombobox")
+        scale_picker = self.scale_picker
         scale_picker.pack(side="left", padx=(0, 20))
         scale_picker.bind("<<ComboboxSelected>>", self._change_scale)
 
@@ -201,9 +223,26 @@ class GestureSynthApp:
         waveform.pack(side="left", padx=(10, 0))
         waveform.bind("<<ComboboxSelected>>", self._change_waveform)
 
+    def _build_note_rack(self, parent: tk.Frame) -> None:
+        self.note_rack = tk.Frame(parent, bg=SURFACE)
+        header = tk.Frame(self.note_rack, bg=SURFACE)
+        header.pack(fill="x", pady=(14, 8))
+        self._section_label(header, "NOTE SLOTS").pack(side="left")
+        tk.Label(header, text="Choose a specific note for each gesture", font=("Segoe UI", 9), fg=MUTED, bg=SURFACE).pack(side="left", padx=10)
+        slots = tk.Frame(self.note_rack, bg=SURFACE)
+        slots.pack(fill="x")
+        note_names = available_note_names()
+        for fingers in range(1, 6):
+            slot = tk.Frame(slots, bg=SURFACE_RAISED, padx=10, pady=8, highlightbackground=BORDER, highlightthickness=1)
+            slot.pack(side="left", fill="x", expand=True, padx=(0 if fingers == 1 else 8, 0))
+            tk.Label(slot, text=f"GESTURE {fingers}", font=("Segoe UI", 8, "bold"), fg=MINT, bg=SURFACE_RAISED).pack(anchor="w")
+            selector = ttk.Combobox(slot, textvariable=self.note_slot_vars[fingers], values=note_names, state="readonly", width=15, style="Dark.TCombobox")
+            selector.pack(fill="x", pady=(3, 0))
+            selector.bind("<<ComboboxSelected>>", lambda _event, slot_number=fingers: self._change_note_slot(slot_number))
+            self.note_selectors.append(selector)
+
     def _build_chord_rack(self, parent: tk.Frame) -> None:
         self.chord_rack = tk.Frame(parent, bg=SURFACE)
-        self.chord_rack.pack(fill="x", pady=(14, 0))
         header = tk.Frame(self.chord_rack, bg=SURFACE)
         header.pack(fill="x", pady=(0, 8))
         self._section_label(header, "CHORD SLOTS").pack(side="left")
@@ -221,7 +260,8 @@ class GestureSynthApp:
             self.chord_selectors.append(selector)
 
     def _build_status_panel(self, panel: tk.Frame) -> None:
-        tk.Label(panel, text="LIVE STATUS", font=("Segoe UI", 11, "bold"), fg=MINT, bg=SURFACE).pack(anchor="w", pady=(0, 16))
+        tk.Label(panel, text="LIVE STATUS", font=("Segoe UI", 11, "bold"), fg=MINT, bg=SURFACE).pack(anchor="w", pady=(0, 8))
+        tk.Label(panel, text="Gesture state and expressive controls", font=("Segoe UI", 9), fg=MUTED, bg=SURFACE).pack(anchor="w", pady=(0, 18))
         for variable, color in (
             (self.mode_status_var, GOLD),
             (self.gesture_var, TEXT),
@@ -292,7 +332,7 @@ class GestureSynthApp:
         return frame
 
     def _play_selected_sound(self, fingers: Optional[int], pitch_bend: float) -> tuple[Optional[NoteConfig], str, str]:
-        if self.performance_mode == "notes":
+        if self.performance_mode == "scale":
             note = self.scale_layout.note_for_fingers(fingers)
             if note is None:
                 self._release_sound()
@@ -305,6 +345,20 @@ class GestureSynthApp:
             else:
                 self.synth.set_frequency(frequency)
             return note, f"NOTE  {note.name}", f"{self.scale_layout.degree_label(fingers)}  |  {frequency:.2f} Hz"
+
+        if self.performance_mode == "notes":
+            note = self.note_slots.get(fingers or 0)
+            if note is None:
+                self._release_sound()
+                return None, "", "Hold a stable 1-5 finger gesture"
+            frequency = self._bent_frequency(note.frequency, pitch_bend)
+            sound_id = f"note-slot:{fingers}:{note.name}"
+            if sound_id != self.last_sound_id:
+                self.synth.note_on(note.name, frequency)
+                self.last_sound_id = sound_id
+            else:
+                self.synth.set_frequency(frequency)
+            return note, f"NOTE  {note.name}", f"Slot {fingers}  |  {frequency:.2f} Hz"
 
         chord = self.chord_slots.get(fingers or 0)
         if chord is None:
@@ -374,16 +428,29 @@ class GestureSynthApp:
         self._refresh_performance_labels()
 
     def _refresh_performance_labels(self) -> None:
+        scale_active = self.performance_mode == "scale"
         notes_active = self.performance_mode == "notes"
+        chords_active = self.performance_mode == "chords"
+        self.scale_button.configure(bg=MINT if scale_active else SURFACE_RAISED, fg=BACKGROUND if scale_active else TEXT)
         self.notes_button.configure(bg=MINT if notes_active else SURFACE_RAISED, fg=BACKGROUND if notes_active else TEXT)
-        self.chords_button.configure(bg=GOLD if not notes_active else SURFACE_RAISED, fg=BACKGROUND if not notes_active else TEXT)
-        selector_state = "disabled" if notes_active else "readonly"
+        self.chords_button.configure(bg=GOLD if chords_active else SURFACE_RAISED, fg=BACKGROUND if chords_active else TEXT)
+        self.root_picker.configure(state="readonly" if scale_active else "disabled")
+        self.scale_picker.configure(state="readonly" if scale_active else "disabled")
+        for selector in self.note_selectors:
+            selector.configure(state="readonly" if notes_active else "disabled")
         for selector in self.chord_selectors:
-            selector.configure(state=selector_state)
-        if notes_active:
-            self.mode_status_var.set(f"NOTES  |  {self.scale_layout.display_name}")
+            selector.configure(state="readonly" if chords_active else "disabled")
+        self.note_rack.pack_forget()
+        self.chord_rack.pack_forget()
+        if scale_active:
+            self.mode_status_var.set(f"SCALE  |  {self.scale_layout.display_name}")
             self.footer_var.set(f"{self.config.music.playing_hand} hand: Root, 3rd, 4th, 5th, Octave. {self.config.music.control_hand} hand: volume and pitch bend.")
+        elif notes_active:
+            self.note_rack.pack(fill="x", pady=(14, 0))
+            self.mode_status_var.set("NOTES  |  Five editable gesture slots")
+            self.footer_var.set(f"{self.config.music.playing_hand} hand: gestures 1-5 trigger selected notes. {self.config.music.control_hand} hand: volume and pitch bend.")
         else:
+            self.chord_rack.pack(fill="x", pady=(14, 0))
             self.mode_status_var.set("CHORDS  |  Gestures 1-5 select chord slots")
             self.footer_var.set(f"{self.config.music.playing_hand} hand: gestures 1-5 trigger selected chords. {self.config.music.control_hand} hand: volume and pitch bend.")
 
@@ -394,6 +461,10 @@ class GestureSynthApp:
 
     def _change_chord_slot(self, fingers: int) -> None:
         self.chord_slots[fingers] = chord_from_label(self.chord_slot_vars[fingers].get())
+        self._release_sound()
+
+    def _change_note_slot(self, fingers: int) -> None:
+        self.note_slots[fingers] = note_from_name(self.note_slot_vars[fingers].get())
         self._release_sound()
 
     def _change_waveform(self, _event: object) -> None:

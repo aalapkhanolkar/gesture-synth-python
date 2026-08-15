@@ -76,6 +76,13 @@ class ChordSlotConfig:
 
 
 @dataclass(frozen=True)
+class NoteSlotConfig:
+    """One editable note assigned to a finger-count gesture."""
+
+    name: str = "C4"
+
+
+@dataclass(frozen=True)
 class MusicConfig:
     """Scale and two-hand expressive control settings."""
 
@@ -85,7 +92,16 @@ class MusicConfig:
     control_hand: str = "Left"
     max_pitch_bend_semitones: float = 3.0
     minimum_amplitude: float = 0.04
-    performance_mode: str = "notes"
+    performance_mode: str = "scale"
+    note_slots: Mapping[int, NoteSlotConfig] = field(
+        default_factory=lambda: {
+            1: NoteSlotConfig("C4"),
+            2: NoteSlotConfig("E4"),
+            3: NoteSlotConfig("F4"),
+            4: NoteSlotConfig("G4"),
+            5: NoteSlotConfig("C5"),
+        }
+    )
     chord_slots: Mapping[int, ChordSlotConfig] = field(
         default_factory=lambda: {
             1: ChordSlotConfig("C", "major"),
@@ -146,8 +162,18 @@ class AppConfig:
                 root=str(value.get("root", "C")),
                 quality=str(value.get("quality", "major")),
             )
-        music_values = {key: value for key, value in music_raw.items() if key != "chord_slots"}
-        music = MusicConfig(**{**defaults.music.__dict__, **music_values, "chord_slots": chord_slots})
+        note_slots = dict(defaults.music.note_slots)
+        for key, value in music_raw.get("note_slots", {}).items():
+            note_slots[int(key)] = NoteSlotConfig(name=str(value.get("name", "C4")))
+        music_values = {key: value for key, value in music_raw.items() if key not in {"chord_slots", "note_slots"}}
+        music = MusicConfig(
+            **{
+                **defaults.music.__dict__,
+                **music_values,
+                "note_slots": note_slots,
+                "chord_slots": chord_slots,
+            }
+        )
 
         note_map = dict(defaults.gesture_notes)
         for key, value in raw.get("gesture_notes", {}).items():

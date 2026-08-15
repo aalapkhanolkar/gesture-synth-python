@@ -56,6 +56,26 @@ def test_count_extended_index_middle_ring_only():
     assert count_extended_fingers(points, "Right", mirrored=True) == 3
 
 
+def test_index_only_is_not_confused_by_an_open_thumb():
+    points = base_landmarks()
+    points[8].y = 0.3
+    points[8].x = 0.5
+    points[6].y = 0.5
+    points[4].x = 0.7
+
+    assert count_extended_fingers(points, "Right", mirrored=True) == 1
+
+
+def test_open_hand_counts_as_five_only_with_all_long_fingers_extended():
+    points = base_landmarks()
+    for tip, pip in [(8, 6), (12, 10), (16, 14), (20, 18)]:
+        points[tip].y = 0.3
+        points[pip].y = 0.5
+    points[4].x = 0.7
+
+    assert count_extended_fingers(points, "Right", mirrored=True) == 5
+
+
 def test_count_extended_rejects_short_landmark_list():
     with pytest.raises(ValueError):
         count_extended_fingers([], "Right")

@@ -28,7 +28,8 @@ The desktop app includes a **Save screenshot** button that captures only the run
 
 - Realtime webcam hand tracking with MediaPipe Hands
 - Two-hand MediaPipe tracking with dedicated playing and control roles
-- Professional dark-mode performance studio with Notes and Chords modes
+- Professional dark-mode performance studio with Scale, Notes, and Chords modes
+- Five editable note slots for direct per-gesture note selection
 - Five editable chord slots mapped directly to gestures one through five
 - Debounced gesture state so notes do not retrigger every frame
 - Continuous polyphonic audio stream with real oscillators, not prerecorded files
@@ -44,7 +45,9 @@ The desktop app includes a **Save screenshot** button that captures only the run
 
 ## Gesture Mapping
 
-The playing hand follows a five-position layout. Select a root and Major or Minor in the UI; the second note adapts to the chosen scale.
+The playing hand uses index through pinky for gestures one through four. The thumb is intentionally ignored for those common gestures so a partly open thumb does not turn `1` into `2`; a fully open hand is gesture five.
+
+In **Scale** mode, select a root and Major or Minor in the top performance deck. The five-position layout adapts musically:
 
 | Gesture | Note | Frequency |
 | --- | --- | --- |
@@ -55,6 +58,18 @@ The playing hand follows a five-position layout. Select a root and Major or Mino
 | 5 fingers | Octave | C5 |
 
 Unsupported gestures, including no hand or an unmapped finger count, smoothly release the active note.
+
+## Note Mode
+
+Select **Notes** to open five editable note slots. Each slot has a chromatic picker from C3 through B5, so you can build your own melody or custom scale without editing code:
+
+| Gesture | Default note slot |
+| --- | --- |
+| 1 finger | C4 |
+| 2 fingers | E4 |
+| 3 fingers | F4 |
+| 4 fingers | G4 |
+| 5 fingers | C5 |
 
 ## Chord Mode
 
@@ -173,7 +188,8 @@ Edit `config.json` to change:
 - MediaPipe confidence thresholds
 - `synth.waveform`, `synth.amplitude`, ADSR values, and portamento
 - `music.root`, `music.scale`, hand roles, pitch bend range, and minimum volume
-- `music.performance_mode` to start in `"notes"` or `"chords"`
+- `music.performance_mode` to start in `"scale"`, `"notes"`, or `"chords"`
+- `music.note_slots` to persist five direct note choices
 - `music.chord_slots` to persist five root/quality chord choices
 
 Example waveform options:
@@ -200,7 +216,7 @@ Example starting configuration for a D Minor two-hand instrument:
 1. `Camera` reads frames from OpenCV.
 2. `HandTracker` detects and labels both hands with MediaPipe landmarks.
 3. The playing hand's finger count is debounced by `GestureStabilizer`.
-4. `ScaleLayout` maps the stable gesture to Root, Third, Fourth, Fifth, or Octave.
+4. The selected Scale, Notes, or Chords performance mode maps the stable gesture to a sound.
 5. The control hand maps height to volume and horizontal position to pitch bend.
 6. `Synthesizer` starts, releases, or glides mono notes and polyphonic chords without recreating the audio engine.
 7. The dark desktop performance UI renders camera landmarks, roles, note/chord controls, mapping, and FPS.

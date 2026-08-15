@@ -64,28 +64,26 @@ def count_extended_fingers(
 ) -> int:
     """Count extended fingers from MediaPipe hand landmarks.
 
-    The four non-thumb fingers are considered extended when the tip sits above
-    the proximal interphalangeal joint. The thumb uses horizontal position and
-    the detected hand label. The ``mirrored`` argument is kept so callers can
-    preserve the same public API if they later process an unflipped camera feed.
+    The four long fingers are considered extended when their tips sit above the
+    proximal interphalangeal joints. For performance gestures, those fingers
+    intentionally define counts one through four. The thumb is only used to
+    distinguish a fully open five-finger hand, which prevents a half-open thumb
+    from turning an index-only gesture into an unstable two-finger gesture.
     """
 
     if len(landmarks) < 21:
         raise ValueError("Expected 21 hand landmarks")
 
-    fingers = 0
+    long_fingers = 0
     for tip_id, pip_id in zip(TIP_IDS[1:], PIP_IDS[1:]):
-        if landmarks[tip_id].y < landmarks[pip_id].y:
-            fingers += 1
+        if landmarks[tip_id].y < landmarks[pip_id].y - 0.02:
+            long_fingers += 1
 
     thumb_tip_x = landmarks[4].x
     thumb_ip_x = landmarks[3].x
     is_right = handedness.lower() == "right"
     thumb_extended = thumb_tip_x > thumb_ip_x if is_right else thumb_tip_x < thumb_ip_x
-    if thumb_extended:
-        fingers += 1
-
-    return fingers
+    return 5 if long_fingers == 4 and thumb_extended else long_fingers
 
 
 def supported_gesture(raw_count: Optional[int], supported_counts: Iterable[int]) -> Optional[int]:

@@ -1,6 +1,6 @@
 import pytest
 
-from src.music import Chord, ScaleLayout, chord_from_label
+from src.music import Chord, ScaleLayout, available_note_names, chord_from_label, note_from_name
 
 
 def test_major_scale_layout_is_root_third_fourth_fifth_octave():
@@ -35,3 +35,9 @@ def test_chord_label_round_trip():
 
     assert chord.root == "D"
     assert chord.quality == "minor7"
+
+
+def test_note_slot_options_resolve_chromatic_frequencies():
+    assert note_from_name("A4").frequency == pytest.approx(440.0)
+    assert "C3" in available_note_names()
+    assert "B5" in available_note_names()

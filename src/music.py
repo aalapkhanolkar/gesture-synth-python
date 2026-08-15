@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 import math
+import re
 from typing import Optional
 
 from .config import NoteConfig
@@ -153,3 +154,20 @@ def available_chord_labels() -> tuple[str, ...]:
         for root in ROOT_SEMITONES
         for quality in CHORD_QUALITY_LABELS
     )
+
+
+def note_from_name(name: str) -> NoteConfig:
+    """Return frequency metadata for a selectable note name such as ``F#4``."""
+
+    match = re.fullmatch(r"([A-G]#?)(-?\d+)", name)
+    if match is None or match.group(1) not in ROOT_SEMITONES:
+        raise ValueError(f"Unsupported note name: {name}")
+    root, octave_text = match.groups()
+    midi_note = 12 * (int(octave_text) + 1) + ROOT_SEMITONES[root]
+    return NoteConfig(name=name, frequency=ScaleLayout._midi_frequency(midi_note))
+
+
+def available_note_names(start_octave: int = 3, end_octave: int = 5) -> tuple[str, ...]:
+    """Return the chromatic note choices offered by the editable note slots."""
+
+    return tuple(f"{root}{octave}" for octave in range(start_octave, end_octave + 1) for root in SHARP_NAMES)

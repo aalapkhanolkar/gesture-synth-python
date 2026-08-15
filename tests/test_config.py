@@ -9,3 +9,6 @@ def test_default_gesture_map_contains_five_notes():
     assert config.gesture_notes[4].name == "G4"
     assert config.gesture_notes[5].name == "C5"
     assert config.gesture.max_num_hands == 2
+    assert config.music.performance_mode == "scale"
+    assert config.music.note_slots[1].name == "C4"
+    assert config.music.chord_slots[2].quality == "minor"
