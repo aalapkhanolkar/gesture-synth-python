@@ -10,7 +10,6 @@ The desktop app includes a **Save screenshot** button that captures only the run
 
 - GIF demo: `assets/screenshots/demo.gif`
 - Screenshot: `assets/screenshots/main-window.png`
-- YouTube or demo video: `https://...`
 
 ## How It Works Visually
 
